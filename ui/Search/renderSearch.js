@@ -1,4 +1,18 @@
 // src/ui/Search/renderSearch.js
+// ---------------------------------------------------------------------------
+// Módulo que renderiza el buscador de canciones.
+//
+// Funciona junto a:
+//   - musicService → para buscar canciones en iTunes API
+//   - playerSlice → para reproducir canciones
+//   - notificationsSlice → para avisos al usuario
+//
+// Ofrece:
+//   Búsqueda normal
+//   Top Songs
+//   Rock
+//   Canciones aleatorias
+// ---------------------------------------------------------------------------
 
 import { store } from "/src/store/index.js";
 import { setQueue, setSong, playSong } from "/src/store/playerSlice.js";
@@ -14,7 +28,9 @@ export default function renderSearch() {
   const rockBtn = document.getElementById("rock-btn");
   const randomBtn = document.getElementById("random-btn");
 
-  // 📌 Función para pintar canciones en pantalla
+  // ------------------------------------------------------
+  // Función para mostrar canciones en pantalla
+  // ------------------------------------------------------
   function renderSongs(results) {
     list.innerHTML = "";
 
@@ -33,6 +49,7 @@ export default function renderSearch() {
         <small>${song.artist}</small>
       `;
 
+      // Al hacer clic → reproducir canción
       li.addEventListener("click", () => {
         store.dispatch(setSong(song));
         store.dispatch(playSong(song));
@@ -41,6 +58,7 @@ export default function renderSearch() {
       list.appendChild(li);
     });
 
+    // Mostrar notificación visual
     store.dispatch(
       addNotification({
         type: "success",
@@ -49,7 +67,9 @@ export default function renderSearch() {
     );
   }
 
-  // 🔍 Búsqueda normal
+  // ------------------------------------------------------
+  // 🔍 Búsqueda normal por término
+  // ------------------------------------------------------
   searchBtn.addEventListener("click", async () => {
     const term = input.value.trim();
     if (!term) return;
@@ -59,21 +79,27 @@ export default function renderSearch() {
     renderSongs(results);
   });
 
-  // ⭐ TOP CANCIONES
+  // ------------------------------------------------------
+  // ⭐ TOP SONGS
+  // ------------------------------------------------------
   topBtn.addEventListener("click", async () => {
     const results = await musicService.getTopSongs();
     store.dispatch(setQueue(results));
     renderSongs(results);
   });
 
+  // ------------------------------------------------------
   // 🤘 ROCK
+  // ------------------------------------------------------
   rockBtn.addEventListener("click", async () => {
     const results = await musicService.getByGenre("rock");
     store.dispatch(setQueue(results));
     renderSongs(results);
   });
 
+  // ------------------------------------------------------
   // 🎲 ALEATORIO
+  // ------------------------------------------------------
   randomBtn.addEventListener("click", async () => {
     const results = await musicService.getRandomSongs();
     store.dispatch(setQueue(results));

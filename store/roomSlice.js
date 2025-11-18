@@ -1,9 +1,20 @@
+// roomSlice.js
+// ---------------------------------------------------------------------------
+// Slice encargado del estado de la SALA DE ESCUCHA.
+// Esta sala es simulada por un Web Worker (syncRoom.worker.js)
+//
+// Controla:
+//   ✓ Invitados conectados
+//   ✓ Estado de reproducción del host (PLAYING / PAUSED / ACTIVE)
+//   ✓ Canción actual seleccionada por el host
+// ---------------------------------------------------------------------------
+
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  guests: [],             // Lista de invitados en la sala
-  playbackStatus: "PAUSED", // PLAYING / PAUSED / ACTIVE
-  currentSongId: null,      // Canción que el host envió
+  guests: [],              // Lista de invitados (simulados por el worker)
+  playbackStatus: "PAUSED", // Estados posibles: PLAYING / PAUSED / ACTIVE
+  currentSongId: null,      // ID de la canción que el host cambió
 };
 
 const roomSlice = createSlice({
@@ -11,22 +22,22 @@ const roomSlice = createSlice({
   initialState,
 
   reducers: {
-    // INVITADO ENTRA
+    // Cuando un invitado entra a la sala
     joinGuest(state, action) {
-      state.guests.push(action.payload); 
+      state.guests.push(action.payload);
     },
 
-    // HOST CAMBIA CANCIÓN
+    // El host cambia la canción → worker envía songId
     setRoomSong(state, action) {
       state.currentSongId = action.payload;
     },
 
-    // PLAY / PAUSE / ACTIVE
+    // El host hace PLAY, PAUSE o activa la sala
     setRoomPlaybackStatus(state, action) {
       state.playbackStatus = action.payload;
     },
 
-    // SI QUIERES LIMPIAR SALA
+    // Reiniciar la sala (si el host la cierra)
     resetRoom(state) {
       state.guests = [];
       state.playbackStatus = "PAUSED";
@@ -35,7 +46,7 @@ const roomSlice = createSlice({
   },
 });
 
-// EXPORTACIONES NECESARIAS
+// Exportar acciones
 export const {
   joinGuest,
   setRoomSong,
@@ -43,4 +54,5 @@ export const {
   resetRoom,
 } = roomSlice.actions;
 
+// Exportar reducer
 export default roomSlice.reducer;

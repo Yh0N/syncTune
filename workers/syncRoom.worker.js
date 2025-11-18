@@ -1,28 +1,47 @@
+// ===========================================================================
+// 🎧 syncRoom.worker.js
+// ---------------------------------------------------------------------------
+// Worker encargado de SIMULAR una sala compartida de música.
+//
+// Funciona como "servidor local":
+//  - Administra invitados
+//  - Mantiene estado de la sala (activa / detenida)
+//  - Recibe acciones del host: PLAY, PAUSE, CAMBIAR CANCIÓN
+//  - Envía eventos al hilo principal mediante postMessage()
+//
+// Este Worker se usa con WorkerFacade.js
+// ===========================================================================
+
+// Estado interno de la sala (solo vive dentro del Worker)
 let guests = [];
 let roomActive = false;
-let playbackStatus = null; // estado interno del reproductor (null al inicio)
-let autoGuestInterval = null;
+let playbackStatus = null;       // "PLAYING" | "PAUSED" | null
+let autoGuestInterval = null;    // Invitados automáticos
 
-// Nombres simulados
+// Nombres aleatorios para simular usuarios reales
 const randomNames = ["Bob", "Alice", "Carlos", "Diana", "Emily", "Frank"];
 
 function getRandomGuest() {
   return randomNames[Math.floor(Math.random() * randomNames.length)];
 }
 
-// Emitir estado global de la sala
+// ---------------------------------------------------------------------------
+// 🔄 Emitir estado completo de la sala
+// ---------------------------------------------------------------------------
 function emitStatus() {
   self.postMessage({
     type: "ROOM_STATUS",
     active: roomActive,
     playback: playbackStatus,
-    guests: [...guests],
+    guests: [...guests], // copiar array
   });
 }
 
-// 🔥 Invitados automáticos (solo si sala activa)
+// ---------------------------------------------------------------------------
+// 🤖 Invitados automáticos cada cierto tiempo
+// ---------------------------------------------------------------------------
 function startAutoGuests(intervalMs = 10000) {
-  if (autoGuestInterval) return;
+  if (autoGuestInterval) return; // ya existe
 
   autoGuestInterval = setInterval(() => {
     if (!roomActive) return;
@@ -46,25 +65,28 @@ function stopAutoGuests() {
   }
 }
 
-// 📩 EVENTOS QUE RECIBE EL WORKER
+// ===========================================================================
+// 📩 MANEJO DE MENSAJES DESDE EL MAIN THREAD
+// ===========================================================================
 self.onmessage = (e) => {
   const { type, songId, payload } = e.data;
 
   switch (type) {
-    /* =============================
-       🟢 CREAR SALA
-    ============================== */
+
+    // -----------------------------------------------------------------------
+    // 🟢 INICIAR SALA
+    // -----------------------------------------------------------------------
     case "START_ROOM":
       roomActive = true;
-      playbackStatus = null; // no mostrar PAUSED por defecto
+      playbackStatus = null; // Aún no reproducimos
 
-      // Notificar arranque
       self.postMessage({ type: "ROOM_STARTED" });
       emitStatus();
 
-      // Primer invitado
+      // Primer invitado simulado
       setTimeout(() => {
         if (!roomActive) return;
+
         const newGuest = getRandomGuest();
         guests.push(newGuest);
 
@@ -79,9 +101,9 @@ self.onmessage = (e) => {
       startAutoGuests();
       break;
 
-    /* =============================
-       ➕ INVITAR MANUAL
-    ============================== */
+    // -----------------------------------------------------------------------
+    // 👤 INVITAR INVITADO MANUALMENTE
+    // -----------------------------------------------------------------------
     case "INVITE_GUEST":
       if (!roomActive || !payload?.name) return;
 
@@ -95,9 +117,9 @@ self.onmessage = (e) => {
       emitStatus();
       break;
 
-    /* =============================
-       ▶ HOST PLAY
-    ============================== */
+    // -----------------------------------------------------------------------
+    // ▶ HOST → PLAY
+    // -----------------------------------------------------------------------
     case "HOST_PLAY":
       if (!roomActive) return;
 
@@ -111,9 +133,9 @@ self.onmessage = (e) => {
       emitStatus();
       break;
 
-    /* =============================
-       ⏸ HOST PAUSE
-    ============================== */
+    // -----------------------------------------------------------------------
+    // ⏸ HOST → PAUSE
+    // -----------------------------------------------------------------------
     case "HOST_PAUSE":
       if (!roomActive) return;
 
@@ -127,18 +149,19 @@ self.onmessage = (e) => {
       emitStatus();
       break;
 
-    /* =============================
-       🔀 HOST CAMBIA CANCIÓN
-    ============================== */
+    // -----------------------------------------------------------------------
+    // 🔀 HOST CAMBIA CANCIÓN
+    // -----------------------------------------------------------------------
     case "HOST_CHANGED_SONG":
       if (!roomActive) return;
 
+      // Notificar al cliente qué canción seleccionó el host
       self.postMessage({
         type: "HOST_CHANGED_SONG",
         songId,
       });
 
-      // Mantener estado actual (PLAYING o PAUSED)
+      // Mantener estado actual de reproducción
       self.postMessage({
         type: "ROOM_PLAYBACK",
         status: playbackStatus,
@@ -147,9 +170,9 @@ self.onmessage = (e) => {
       emitStatus();
       break;
 
-    /* =============================
-       🔴 DETENER SALA
-    ============================== */
+    // -----------------------------------------------------------------------
+    // 🔴 DETENER SALA
+    // -----------------------------------------------------------------------
     case "STOP_ROOM":
       roomActive = false;
       stopAutoGuests();
@@ -160,6 +183,9 @@ self.onmessage = (e) => {
       emitStatus();
       break;
 
+    // -----------------------------------------------------------------------
+    // ❓ EVENTO DESCONOCIDO
+    // -----------------------------------------------------------------------
     default:
       self.postMessage({
         type: "ERROR",

@@ -1,16 +1,23 @@
 // export.worker.js
-// Exporta la playlist SIN solicitar nada a iTunes (usa los datos locales)
+// ---------------------------------------------------------------------------
+// Worker encargado de EXPORTAR la playlist a formatos CSV o JSON.
+// No depende de iTunes ni servicios externos. Usa los datos locales.
+// ---------------------------------------------------------------------------
 
 self.onmessage = async (e) => {
   const { type, songs, format } = e.data;
 
+  // Acepta únicamente mensajes EXPORT_PLAYLIST
   if (type !== "EXPORT_PLAYLIST") return;
 
   try {
-    // CSV
+    // ---------------------------------------------------------
+    // 📄 Exportación CSV
+    // ---------------------------------------------------------
     if (format === "csv") {
       const header = "id,title,artist,album,preview\n";
 
+      // Ensamblamos filas del CSV
       const rows = songs
         .map(
           (s) =>
@@ -18,8 +25,10 @@ self.onmessage = async (e) => {
         )
         .join("\n");
 
+      // Crear Blob final del CSV
       const blob = new Blob([header + rows], { type: "text/csv" });
 
+      // Enviamos resultado al main thread
       self.postMessage({
         type: "EXPORT_DONE",
         blob,
@@ -29,7 +38,9 @@ self.onmessage = async (e) => {
       return;
     }
 
-    // JSON
+    // ---------------------------------------------------------
+    // 🟦 Exportación JSON
+    // ---------------------------------------------------------
     if (format === "json") {
       const blob = new Blob([JSON.stringify(songs, null, 2)], {
         type: "application/json",
@@ -43,7 +54,9 @@ self.onmessage = async (e) => {
 
       return;
     }
+
   } catch (err) {
+    // Error al exportar
     self.postMessage({
       type: "EXPORT_ERROR",
       error: err.message,

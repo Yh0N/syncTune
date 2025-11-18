@@ -1,3 +1,12 @@
+// renderPlayer.js
+// -----------------------------------------------------------------------------
+// Este archivo controla TODO el reproductor de música:
+// botones, audio HTML, estrategias de reproducción, workers y Redux.
+
+// ⭐ Dentro de este archivo se usa el Patrón STRATEGY (Linear / Loop / Shuffle)
+//   para decidir cómo avanza la música (NEXT / PREVIOUS).
+// -----------------------------------------------------------------------------
+
 import {
   playSong,
   pauseSong,
@@ -15,9 +24,13 @@ import WorkerFacade from "/src/services/workerFacade.js";
 import { addNotification } from "/src/store/notificationsSlice.js";
 import NotificationFactory from "/src/patterns/factory/NotificationFactory.js";
 
+// Facade → conexión UI ↔ Workers
 const facade = new WorkerFacade(store);
 
 export default function renderPlayer(store, facade) {
+  // ---------------------------------------------------------------------------
+  // 🔘 Referencias UI
+  // ---------------------------------------------------------------------------
   const playBtn = document.getElementById("play-btn");
   const pauseBtn = document.getElementById("pause-btn");
   const nextBtn = document.getElementById("next-btn");
@@ -25,23 +38,24 @@ export default function renderPlayer(store, facade) {
   const strategySelect = document.getElementById("strategy-select");
   const currentSongText = document.getElementById("current-song");
 
-  // local
   const inputLocal = document.getElementById("local-music-input");
   const btnAddLocal = document.getElementById("add-local-music-btn");
 
-  // exportación
   const exportCsvBtn = document.getElementById("export-csv-btn");
   const exportJsonBtn = document.getElementById("export-json-btn");
 
   const mySongsList = document.getElementById("my-songs-list");
 
+  // Reproductor real del navegador
   const audio = new Audio();
 
-
-  // Reproduce siguiente
+  // ---------------------------------------------------------------------------
+  // ▶ CUANDO UNA CANCIÓN TERMINA → usar estrategia actual (Strategy Pattern)
+  // ---------------------------------------------------------------------------
   audio.addEventListener("ended", () => {
     const state = store.getState().player;
-    const strategy = strategies[state.strategy];
+    const strategy = strategies[state.strategy]; // LINEAR / SHUFFLE / LOOP
+
     const nextSongData = strategy.getNextSong(state.currentSong, state.queue);
 
     if (nextSongData) {
@@ -50,12 +64,11 @@ export default function renderPlayer(store, facade) {
     }
   });
 
-  /* ----------------------------------------
-     DIBUJAR "MIS CANCIONES"
-  ---------------------------------------- */
+  // ---------------------------------------------------------------------------
+  // 🎵 Render listar música local
+  // ---------------------------------------------------------------------------
   function renderMySongs() {
     const localSongs = store.getState().player.localSongs;
-
     mySongsList.innerHTML = "";
 
     localSongs.forEach((song) => {
@@ -72,13 +85,12 @@ export default function renderPlayer(store, facade) {
     });
   }
 
-  /* ----------------------------------------
-     SUSCRIPCIÓN GENERAL DEL PLAYER
-  ---------------------------------------- */
+  // ---------------------------------------------------------------------------
+  // 🎧 Suscripción global al store → refrescar UI
+  // ---------------------------------------------------------------------------
   store.subscribe(() => {
     const state = store.getState().player;
 
-    // actualizar mis canciones
     renderMySongs();
 
     const song = state.currentSong;
@@ -102,9 +114,9 @@ export default function renderPlayer(store, facade) {
     else audio.pause();
   });
 
-  /* ----------------------------------------
-     SUBIR MÚSICA LOCAL — 100% FIJO
-  ---------------------------------------- */
+  // ---------------------------------------------------------------------------
+  // 🎵 Subir música local
+  // ---------------------------------------------------------------------------
   btnAddLocal.addEventListener("click", () => {
     const file = inputLocal.files[0];
     if (!file) return alert("Selecciona un archivo MP3");
@@ -132,9 +144,9 @@ export default function renderPlayer(store, facade) {
     );
   });
 
-  /* ----------------------------------------
-     CONTROLES
-  ---------------------------------------- */
+  // ---------------------------------------------------------------------------
+  // ▶ PLAY
+  // ---------------------------------------------------------------------------
   playBtn.addEventListener("click", () => {
     const song = store.getState().player.currentSong;
     if (song) {
@@ -143,14 +155,21 @@ export default function renderPlayer(store, facade) {
     }
   });
 
+  // ---------------------------------------------------------------------------
+  // ⏸ PAUSE
+  // ---------------------------------------------------------------------------
   pauseBtn.addEventListener("click", () => {
     store.dispatch(pauseSong());
     facade.hostPause();
   });
 
+  // ---------------------------------------------------------------------------
+  // ⏭ SIGUIENTE (USANDO STRATEGY)
+  // ---------------------------------------------------------------------------
   nextBtn.addEventListener("click", () => {
     const state = store.getState().player;
     const strategy = strategies[state.strategy];
+
     const nextSongData = strategy.getNextSong(state.currentSong, state.queue);
 
     if (nextSongData) {
@@ -159,45 +178,46 @@ export default function renderPlayer(store, facade) {
     }
   });
 
+  // ---------------------------------------------------------------------------
+  // ⏮ ANTERIOR (⭐ NUEVO — AHORA USA getPreviousSong DEL STRATEGY)
+  // ---------------------------------------------------------------------------
   prevBtn.addEventListener("click", () => {
     const state = store.getState().player;
-    const index = state.queue.findIndex(
-      (s) => s.id === state.currentSong.id
+    const strategy = strategies[state.strategy]; // ⭐ antes ignorabas la estrategia
+
+    // ⭐ AHORA el botón anterior también usa el patrón STRATEGY
+    const prevSongData = strategy.getPreviousSong(
+      state.currentSong,
+      state.queue
     );
 
-    const prevIndex =
-      (index - 1 + state.queue.length) % state.queue.length;
-
-    const prevSong = state.queue[prevIndex];
-
-    store.dispatch(previousSong(prevSong));
-    facade.hostChangeSong(prevSong.id);
+    if (prevSongData) {
+      store.dispatch(previousSong(prevSongData));
+      facade.hostChangeSong(prevSongData.id);
+    }
   });
 
+  // ---------------------------------------------------------------------------
+  // 🔄 CAMBIAR ESTRATEGIA DE REPRODUCCIÓN
+  // ---------------------------------------------------------------------------
   strategySelect.addEventListener("change", (e) => {
     store.dispatch(setStrategy(e.target.value));
   });
 
-/* ----------------------------------------
-   EXPORTACIÓN DE PLAYLIST
----------------------------------------- */
-exportCsvBtn.addEventListener("click", () => {
-  const queue = store.getState().player.queue;
-  if (queue.length === 0) {
-    alert("No hay canciones en la playlist para exportar.");
-    return;
-  }
-  facade.exportPlaylist("csv");
-});
+  // ---------------------------------------------------------------------------
+  // 📦 EXPORTAR PLAYLIST
+  // ---------------------------------------------------------------------------
+  exportCsvBtn.addEventListener("click", () => {
+    const queue = store.getState().player.queue;
+    if (!queue.length) return alert("Playlist vacía");
 
-exportJsonBtn.addEventListener("click", () => {
-  const queue = store.getState().player.queue;
-  if (queue.length === 0) {
-    alert("No hay canciones en la playlist para exportar.");
-    return;
-  }
-  facade.exportPlaylist("json");
-});
+    facade.exportPlaylist("csv");
+  });
 
+  exportJsonBtn.addEventListener("click", () => {
+    const queue = store.getState().player.queue;
+    if (!queue.length) return alert("Playlist vacía");
 
+    facade.exportPlaylist("json");
+  });
 }
