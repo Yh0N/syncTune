@@ -17,7 +17,7 @@ import NotificationFactory from "/src/patterns/factory/NotificationFactory.js";
 
 const facade = new WorkerFacade(store);
 
-export default function renderPlayer() {
+export default function renderPlayer(store, facade) {
   const playBtn = document.getElementById("play-btn");
   const pauseBtn = document.getElementById("pause-btn");
   const nextBtn = document.getElementById("next-btn");
@@ -33,10 +33,10 @@ export default function renderPlayer() {
   const exportCsvBtn = document.getElementById("export-csv-btn");
   const exportJsonBtn = document.getElementById("export-json-btn");
 
-  // MIS CANCIONES (Fijo)
   const mySongsList = document.getElementById("my-songs-list");
 
   const audio = new Audio();
+
 
   // Reproduce siguiente
   audio.addEventListener("ended", () => {
