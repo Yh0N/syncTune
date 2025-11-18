@@ -1,0 +1,573 @@
+/* ============================================
+   🎨 VARIABLES CSS
+============================================ */
+:root {
+  --primary: #8b5cf6;
+  --primary-dark: #6d28d9;
+  --secondary: #ec4899;
+  --accent: #10b981;
+  --bg-dark: #0f0f23;
+  --bg-card: rgba(30, 30, 60, 0.6);
+  --text-primary: #f0f0f0;
+  --text-secondary: #a0a0b0;
+  --border: rgba(139, 92, 246, 0.3);
+  --error: #ef4444;
+  --success: #10b981;
+}
+
+/* ============================================
+   RESET Y BASE
+============================================ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0f0f23 100%);
+  color: var(--text-primary);
+  min-height: 100vh;
+  padding: 20px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Fondo animado con pulso */
+body::before {
+  content: '';
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+  animation: pulse 15s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    transform: scale(1) rotate(0deg); 
+  }
+  50% { 
+    transform: scale(1.1) rotate(5deg); 
+  }
+}
+
+/* ============================================
+   🎵 HEADER PRINCIPAL
+============================================ */
+h1 {
+  text-align: center;
+  font-size: 3rem;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 30px;
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
+  animation: glow 2s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%, 100% { 
+    filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.5)); 
+  }
+  50% { 
+    filter: drop-shadow(0 0 20px rgba(236, 72, 153, 0.8)); 
+  }
+}
+
+/* ============================================
+   🔐 PANEL DE AUTENTICACIÓN
+============================================ */
+#auth-panel {
+  max-width: 400px;
+  margin: 0 auto 30px;
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  position: relative;
+  z-index: 1;
+  animation: slideDown 0.5s ease;
+}
+
+@keyframes slideDown {
+  from { 
+    opacity: 0; 
+    transform: translateY(-30px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+#login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* ============================================
+   📝 INPUTS Y FORMULARIOS
+============================================ */
+input[type="text"],
+input[type="password"],
+input[type="file"] {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 15px;
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+}
+
+input[type="file"] {
+  cursor: pointer;
+}
+
+/* ============================================
+   🔘 BOTONES
+============================================ */
+button {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 14px;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(139, 92, 246, 0.5);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+#logout-btn {
+  background: linear-gradient(135deg, var(--error), #dc2626);
+  margin-bottom: 20px;
+}
+
+/* ============================================
+   🔔 NOTIFICACIONES
+============================================ */
+#notifications {
+  max-width: 1200px;
+  margin: 0 auto 30px;
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+#notifications h2 {
+  color: var(--secondary);
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+}
+
+#notif-list {
+  list-style: none;
+  min-height: 40px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* ============================================
+   🎧 APLICACIÓN PRINCIPAL
+============================================ */
+#music-app {
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+#music-app > h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: var(--accent);
+  font-size: 1.8rem;
+}
+
+/* ============================================
+   🎵 REPRODUCTOR
+============================================ */
+#player {
+  background: var(--bg-card);
+  backdrop-filter: blur(15px);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 30px;
+  margin-bottom: 30px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+#player h3 {
+  color: var(--primary);
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+
+#current-song {
+  background: rgba(139, 92, 246, 0.1);
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+  text-align: center;
+  border: 1px solid var(--primary);
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+#prev-btn, #play-btn, #pause-btn, #next-btn {
+  min-width: 90px;
+}
+
+/* ============================================
+   📋 SELECT
+============================================ */
+select {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 15px;
+  color: var(--text-primary);
+  margin-left: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+}
+
+select option {
+  background: var(--bg-dark);
+  color: var(--text-primary);
+}
+
+/* ============================================
+   📥📤 SUBIR Y EXPORTAR
+============================================ */
+#local-upload, #export-tools {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  border-radius: 15px;
+  margin-top: 20px;
+}
+
+#local-upload h4, #export-tools h4 {
+  color: var(--secondary);
+  margin-bottom: 15px;
+  font-size: 1rem;
+}
+
+#local-upload input[type="file"] {
+  display: block;
+  margin-bottom: 10px;
+}
+
+#export-tools button {
+  background: linear-gradient(135deg, var(--accent), #059669);
+  margin-right: 10px;
+  margin-bottom: 10px;
+}
+
+/* ============================================
+   📊 GRID LAYOUT
+============================================ */
+.content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+/* ============================================
+   🎼 MIS CANCIONES Y BÚSQUEDA
+============================================ */
+#my-songs-panel, #search {
+  background: var(--bg-card);
+  backdrop-filter: blur(15px);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+#my-songs-panel h3, #search h3 {
+  color: var(--secondary);
+  margin-bottom: 20px;
+  font-size: 1.3rem;
+}
+
+#my-songs-list, #search-results {
+  list-style: none;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 15px;
+  border-radius: 10px;
+  min-height: 100px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+#my-songs-list li, #search-results li {
+  padding: 10px;
+  margin-bottom: 8px;
+  background: rgba(139, 92, 246, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 1px solid transparent;
+}
+
+#my-songs-list li:hover, #search-results li:hover {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: var(--primary);
+  transform: translateX(5px);
+}
+
+/* ============================================
+   🔍 BÚSQUEDA
+============================================ */
+#search-input {
+  flex: 1;
+  min-width: 200px;
+}
+
+#search-btn {
+  min-width: 100px;
+}
+
+#quick-options {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  flex-wrap: wrap;
+}
+
+#quick-options button {
+  background: linear-gradient(135deg, var(--accent), #059669);
+  font-size: 12px;
+  padding: 8px 15px;
+  flex: 1;
+  min-width: 120px;
+}
+
+/* ============================================
+   🟣 SALA DE ESCUCHA
+============================================ */
+#room {
+  background: var(--bg-card);
+  backdrop-filter: blur(15px);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 30px;
+  margin-bottom: 30px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+#room h3 {
+  color: var(--accent);
+  margin-bottom: 20px;
+  font-size: 1.3rem;
+}
+
+#room-status {
+  background: rgba(16, 185, 129, 0.1);
+  padding: 10px 15px;
+  border-radius: 10px;
+  margin: 15px 0;
+  border: 1px solid var(--accent);
+  font-weight: 600;
+}
+
+#guests-list {
+  list-style: none;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 15px;
+  border-radius: 10px;
+  min-height: 60px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+#guests-list li {
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+/* ============================================
+   📄 DETALLE DE CANCIÓN
+============================================ */
+#song-detail {
+  background: var(--bg-card);
+  backdrop-filter: blur(15px);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 30px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+#song-detail h3 {
+  color: var(--primary);
+  margin-bottom: 20px;
+  font-size: 1.4rem;
+}
+
+#detail-cover {
+  border-radius: 15px;
+  margin-bottom: 20px;
+  box-shadow: 0 5px 25px rgba(139, 92, 246, 0.3);
+  max-width: 100%;
+  height: auto;
+}
+
+#song-detail p {
+  margin: 10px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+#detail-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+#detail-close {
+  margin-top: 20px;
+  background: linear-gradient(135deg, var(--error), #dc2626);
+}
+
+/* ============================================
+   ✨ SCROLLBAR PERSONALIZADO
+============================================ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-dark);
+}
+
+/* ============================================
+   📱 RESPONSIVE
+============================================ */
+@media (max-width: 768px) {
+  h1 { 
+    font-size: 2rem; 
+  }
+
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #search-input {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .controls {
+    flex-direction: column;
+  }
+
+  #prev-btn, #play-btn, #pause-btn, #next-btn {
+    width: 100%;
+  }
+
+  #quick-options {
+    flex-direction: column;
+  }
+
+  #quick-options button {
+    width: 100%;
+  }
+
+  #player, #my-songs-panel, #search, #room {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 10px;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+
+  #auth-panel {
+    padding: 20px;
+  }
+
+  #player h3, #my-songs-panel h3, #search h3, #room h3 {
+    font-size: 1.1rem;
+  }
+}
