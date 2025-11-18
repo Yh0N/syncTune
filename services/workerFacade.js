@@ -71,11 +71,9 @@ export default class WorkerFacade {
           break;
 
         case "ROOM_STATUS":
-          // Actualiza estado global de la sala
           if (playback) {
             this.store.dispatch(setRoomPlaybackStatus(playback));
           }
-          // Notificación con snapshot de la sala
           this.store.dispatch(
             addNotification(
               NotificationFactory.create("ROOM_STATUS", {
@@ -154,11 +152,9 @@ export default class WorkerFacade {
             );
           }
 
-
           break;
 
         default:
-          // Ya no debería aparecer, pero mantenemos el log por seguridad
           console.warn("Evento desconocido:", e.data);
       }
     };
@@ -230,10 +226,15 @@ export default class WorkerFacade {
     });
   }
 
-  exportPlaylist(songIds, format = "csv") {
+  /* ----------------------------------------
+     EXPORTACIÓN (ARREGLADA)
+  ---------------------------------------- */
+  exportPlaylist(format = "csv") {
+    const queue = this.store.getState().player.queue;
+
     this.exportWorker.postMessage({
       type: "EXPORT_PLAYLIST",
-      songIds,
+      songs: queue,
       format,
     });
   }

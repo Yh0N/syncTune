@@ -1,48 +1,24 @@
-// 📦 export.worker.js
-// Exporta playlist a CSV o JSON usando iTunes API
+// export.worker.js
+// Exporta la playlist SIN solicitar nada a iTunes (usa los datos locales)
 
 self.onmessage = async (e) => {
-  const { type, songIds, format } = e.data;
+  const { type, songs, format } = e.data;
 
   if (type !== "EXPORT_PLAYLIST") return;
 
   try {
-    // Fetch masivo usando Promise.all
-    const results = await Promise.all(
-      songIds.map(async (id) => {
-        const res = await fetch(
-          `https://itunes.apple.com/lookup?id=${id}`
-        );
-
-        const data = await res.json();
-        const song = data.results[0];
-
-        return {
-          id: song.trackId,
-          title: song.trackName,
-          artist: song.artistName,
-          album: song.collectionName,
-          duration: song.trackTimeMillis,
-          preview: song.previewUrl,
-        };
-      })
-    );
-
-    // Convertir a CSV
+    // CSV
     if (format === "csv") {
-      const header =
-        "id,title,artist,album,duration(ms),preview\n";
+      const header = "id,title,artist,album,preview\n";
 
-      const rows = results
+      const rows = songs
         .map(
           (s) =>
-            `${s.id},"${s.title}","${s.artist}","${s.album}",${s.duration},${s.preview}`
+            `${s.id},"${s.title}","${s.artist ?? ""}","${s.album ?? ""}",${s.preview}`
         )
         .join("\n");
 
-      const blob = new Blob([header + rows], {
-        type: "text/csv",
-      });
+      const blob = new Blob([header + rows], { type: "text/csv" });
 
       self.postMessage({
         type: "EXPORT_DONE",
@@ -53,11 +29,9 @@ self.onmessage = async (e) => {
       return;
     }
 
-    // Convertir a JSON
+    // JSON
     if (format === "json") {
-      const json = JSON.stringify(results, null, 2);
-
-      const blob = new Blob([json], {
+      const blob = new Blob([JSON.stringify(songs, null, 2)], {
         type: "application/json",
       });
 

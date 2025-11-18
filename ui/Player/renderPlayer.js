@@ -178,24 +178,26 @@ export default function renderPlayer(store, facade) {
     store.dispatch(setStrategy(e.target.value));
   });
 
-  /* ----------------------------------------
-     EXPORTACIÓN DE PLAYLIST
-  ---------------------------------------- */
-  exportCsvBtn.addEventListener("click", () => {
-    const songIds = store.getState().player.queue.map((s) => s.id);
-    if (songIds.length === 0) {
-      alert("No hay canciones en la playlist para exportar.");
-      return;
-    }
-    facade.exportPlaylist(songIds, "csv");
-  });
+/* ----------------------------------------
+   EXPORTACIÓN DE PLAYLIST
+---------------------------------------- */
+exportCsvBtn.addEventListener("click", () => {
+  const queue = store.getState().player.queue;
+  if (queue.length === 0) {
+    alert("No hay canciones en la playlist para exportar.");
+    return;
+  }
+  facade.exportPlaylist("csv");
+});
 
-  exportJsonBtn.addEventListener("click", () => {
-    const songIds = store.getState().player.queue.map((s) => s.id);
-    if (songIds.length === 0) {
-      alert("No hay canciones en la playlist para exportar.");
-      return;
-    }
-    facade.exportPlaylist(songIds, "json");
-  });
+exportJsonBtn.addEventListener("click", () => {
+  const queue = store.getState().player.queue;
+  if (queue.length === 0) {
+    alert("No hay canciones en la playlist para exportar.");
+    return;
+  }
+  facade.exportPlaylist("json");
+});
+
+
 }
