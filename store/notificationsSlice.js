@@ -10,18 +10,17 @@ const notificationsSlice = createSlice({
   initialState,
   reducers: {
     addNotification(state, action) {
-      const notif = {
-        id: Date.now(), // identificador único
-        type: action.payload.type || "info",
-        message: action.payload.message || "",
-      };
-      state.notifications.push(notif);
+      // YA NO RECREAMOS EL OBJETO
+      // LO USAMOS TAL CUAL LLEGA DESDE NotificationFactory
+      state.notifications.push(action.payload);
     },
+
     removeNotification(state, action) {
       state.notifications = state.notifications.filter(
         (n) => n.id !== action.payload
       );
     },
+
     clearNotifications(state) {
       state.notifications = [];
     },

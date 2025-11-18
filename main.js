@@ -10,42 +10,36 @@ import renderNotifications from "./ui/Notifications/NotificationPanel.js";
 
 import WorkerFacade from "./services/workerFacade.js";
 
-const facade = new WorkerFacade(store);
+const facade = new WorkerFacade(store); // 🔥 SOLO UNA VEZ
 
-// ========================
-// INIT UI
-// ========================
+// RENDERIZAR UI SOLO UNA VEZ
 renderAuth(apiService, store);
 renderPlayer(store, facade);
-renderMySongs();  // 🔥 PANEL FIJO DE TUS CANCIONES
+renderMySongs();
 renderSearch(store);
 renderRooms(store, facade);
-
-// NOTIFICACIONES: Inicialmente ocultas
-const notifSection = document.getElementById("notifications");
-notifSection.style.display = "none";
 renderNotifications(store);
 
-// ========================
-// PANEL DE AUTENTICACIÓN / APP PRINCIPAL
-// ========================
+const notifSection = document.getElementById("notifications");
+notifSection.style.display = "none";
+
 const authPanel = document.getElementById("auth-panel");
 const musicApp = document.getElementById("music-app");
 
-// Función para actualizar UI según estado de login
+// SOLO LOGIN/LOGOUT
 function updateUI() {
   const state = store.getState();
   const isLoggedIn = state.auth.status === "succeeded";
 
   authPanel.style.display = isLoggedIn ? "none" : "block";
   musicApp.style.display = isLoggedIn ? "block" : "none";
-
-  // Mostrar notificaciones solo si está logueado
   notifSection.style.display = isLoggedIn ? "block" : "none";
+
+  // Renderiza solo notificaciones (seguro)
+  renderNotifications(store);
 }
 
-// Suscribirse a cambios del store
+// 🔥 SOLO updateUI dentro del subscribe
 store.subscribe(updateUI);
 
-// Llamada inicial para reflejar estado al cargar la página
 updateUI();

@@ -2,21 +2,27 @@
 import { store } from "../../store/index.js";
 
 export default function renderNotifications() {
-  const notifList = document.getElementById("notif-list");
-  if (!notifList) {
-    console.error("No se encontró el elemento #notif-list en el DOM");
+  const list = document.getElementById("notif-list");
+  if (!list) {
+    console.error("❌ No existe #notif-list en el HTML");
     return;
   }
 
   store.subscribe(() => {
-    const state = store.getState();
-    const notifications = state.notifications.notifications;
+    const notifs = store.getState().notifications.notifications;
 
-    notifList.innerHTML = "";
-    notifications.forEach((n) => {
+    list.innerHTML = "";
+
+    notifs.forEach((n) => {
       const li = document.createElement("li");
-      li.textContent = `[${n.type}] ${n.message}`;
-      notifList.appendChild(li);
+      li.style.padding = "6px";
+      li.style.marginBottom = "4px";
+      li.style.borderLeft = "4px solid #4caf50";
+      li.style.background = "#222";
+      li.style.fontSize = "13px";
+
+      li.innerHTML = `<strong>[${n.type}]</strong> ${n.message}`;
+      list.appendChild(li);
     });
   });
 }

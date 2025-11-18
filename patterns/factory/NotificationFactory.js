@@ -1,10 +1,8 @@
-// src/patterns/factory/NotificationFactory.js
 import { v4 as uuidv4 } from "uuid";
 
 export default class NotificationFactory {
   static create(type, payload = {}) {
     switch (type) {
-
       /* ---------------------
          Invitados
       ----------------------*/
@@ -53,6 +51,35 @@ export default class NotificationFactory {
           id: uuidv4(),
           type: "info",
           message: `Estado de reproducción: ${payload.status} 🎛️`,
+        };
+
+      /* ---------------------
+         Sala iniciada / detenida
+      ----------------------*/
+      case "ROOM_STARTED":
+        return {
+          id: uuidv4(),
+          type: "info",
+          message: `Sala iniciada 🟢`,
+        };
+
+      case "ROOM_STOPPED":
+        return {
+          id: uuidv4(),
+          type: "info",
+          message: `Sala detenida 🔴`,
+        };
+
+      /* ---------------------
+         Estado global de la sala
+      ----------------------*/
+      case "ROOM_STATUS":
+        return {
+          id: uuidv4(),
+          type: "info",
+          message: `Sala ${payload.active ? "activa" : "inactiva"}${
+            payload.playback ? ` • Estado: ${payload.playback}` : ""
+          } • Invitados: ${payload.guestsCount ?? 0}`,
         };
 
       /* ---------------------

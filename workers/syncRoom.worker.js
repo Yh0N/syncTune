@@ -1,7 +1,6 @@
-// src/workers/syncRoom.worker.js
-
 let guests = [];
 let roomActive = false;
+let playbackStatus = null; // estado interno del reproductor (null al inicio)
 let autoGuestInterval = null;
 
 // Nombres simulados
@@ -11,8 +10,18 @@ function getRandomGuest() {
   return randomNames[Math.floor(Math.random() * randomNames.length)];
 }
 
+// Emitir estado global de la sala
+function emitStatus() {
+  self.postMessage({
+    type: "ROOM_STATUS",
+    active: roomActive,
+    playback: playbackStatus,
+    guests: [...guests],
+  });
+}
+
 // 🔥 Invitados automáticos (solo si sala activa)
-function startAutoGuests() {
+function startAutoGuests(intervalMs = 10000) {
   if (autoGuestInterval) return;
 
   autoGuestInterval = setInterval(() => {
@@ -25,12 +34,16 @@ function startAutoGuests() {
       type: "GUEST_JOINED",
       user: newGuest,
     });
-  }, 10000);
+
+    emitStatus();
+  }, intervalMs);
 }
 
 function stopAutoGuests() {
-  clearInterval(autoGuestInterval);
-  autoGuestInterval = null;
+  if (autoGuestInterval) {
+    clearInterval(autoGuestInterval);
+    autoGuestInterval = null;
+  }
 }
 
 // 📩 EVENTOS QUE RECIBE EL WORKER
@@ -43,9 +56,15 @@ self.onmessage = (e) => {
     ============================== */
     case "START_ROOM":
       roomActive = true;
+      playbackStatus = null; // no mostrar PAUSED por defecto
+
+      // Notificar arranque
+      self.postMessage({ type: "ROOM_STARTED" });
+      emitStatus();
 
       // Primer invitado
       setTimeout(() => {
+        if (!roomActive) return;
         const newGuest = getRandomGuest();
         guests.push(newGuest);
 
@@ -53,6 +72,8 @@ self.onmessage = (e) => {
           type: "GUEST_JOINED",
           user: newGuest,
         });
+
+        emitStatus();
       }, 1000);
 
       startAutoGuests();
@@ -62,7 +83,7 @@ self.onmessage = (e) => {
        ➕ INVITAR MANUAL
     ============================== */
     case "INVITE_GUEST":
-      if (!roomActive) return;
+      if (!roomActive || !payload?.name) return;
 
       guests.push(payload.name);
 
@@ -70,6 +91,8 @@ self.onmessage = (e) => {
         type: "GUEST_JOINED",
         user: payload.name,
       });
+
+      emitStatus();
       break;
 
     /* =============================
@@ -78,11 +101,14 @@ self.onmessage = (e) => {
     case "HOST_PLAY":
       if (!roomActive) return;
 
+      playbackStatus = "PLAYING";
+
       self.postMessage({
         type: "ROOM_PLAYBACK",
-        status: "PLAYING",
+        status: playbackStatus,
       });
 
+      emitStatus();
       break;
 
     /* =============================
@@ -91,11 +117,14 @@ self.onmessage = (e) => {
     case "HOST_PAUSE":
       if (!roomActive) return;
 
+      playbackStatus = "PAUSED";
+
       self.postMessage({
         type: "ROOM_PLAYBACK",
-        status: "PAUSED",
+        status: playbackStatus,
       });
 
+      emitStatus();
       break;
 
     /* =============================
@@ -104,17 +133,18 @@ self.onmessage = (e) => {
     case "HOST_CHANGED_SONG":
       if (!roomActive) return;
 
-      // 🔥 RESTAURADO → Cuando cambia canción siempre envía PLAYING
       self.postMessage({
         type: "HOST_CHANGED_SONG",
         songId,
       });
 
+      // Mantener estado actual (PLAYING o PAUSED)
       self.postMessage({
         type: "ROOM_PLAYBACK",
-        status: "PLAYING",
+        status: playbackStatus,
       });
 
+      emitStatus();
       break;
 
     /* =============================
@@ -124,9 +154,16 @@ self.onmessage = (e) => {
       roomActive = false;
       stopAutoGuests();
       guests = [];
+      playbackStatus = null;
+
+      self.postMessage({ type: "ROOM_STOPPED" });
+      emitStatus();
       break;
 
     default:
-      console.log("Evento ignorado:", type);
+      self.postMessage({
+        type: "ERROR",
+        message: `Evento ignorado: ${type}`,
+      });
   }
 };

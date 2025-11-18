@@ -6,7 +6,7 @@ import {
   setStrategy,
   addToQueue,
   setSong,
-  addLocalSong
+  addLocalSong,
 } from "/src/store/playerSlice.js";
 
 import { store } from "/src/store/index.js";
@@ -28,6 +28,10 @@ export default function renderPlayer() {
   // local
   const inputLocal = document.getElementById("local-music-input");
   const btnAddLocal = document.getElementById("add-local-music-btn");
+
+  // exportación
+  const exportCsvBtn = document.getElementById("export-csv-btn");
+  const exportJsonBtn = document.getElementById("export-json-btn");
 
   // MIS CANCIONES (Fijo)
   const mySongsList = document.getElementById("my-songs-list");
@@ -114,13 +118,8 @@ export default function renderPlayer() {
       local: true,
     };
 
-    // 1️⃣ Guardar solo en MIS CANCIONES
     store.dispatch(addLocalSong(song));
-
-    // 2️⃣ También agregar a la cola
     store.dispatch(addToQueue(song));
-
-    // 3️⃣ Reproducir
     store.dispatch(setSong(song));
     store.dispatch(playSong(song));
 
@@ -177,5 +176,26 @@ export default function renderPlayer() {
 
   strategySelect.addEventListener("change", (e) => {
     store.dispatch(setStrategy(e.target.value));
+  });
+
+  /* ----------------------------------------
+     EXPORTACIÓN DE PLAYLIST
+  ---------------------------------------- */
+  exportCsvBtn.addEventListener("click", () => {
+    const songIds = store.getState().player.queue.map((s) => s.id);
+    if (songIds.length === 0) {
+      alert("No hay canciones en la playlist para exportar.");
+      return;
+    }
+    facade.exportPlaylist(songIds, "csv");
+  });
+
+  exportJsonBtn.addEventListener("click", () => {
+    const songIds = store.getState().player.queue.map((s) => s.id);
+    if (songIds.length === 0) {
+      alert("No hay canciones en la playlist para exportar.");
+      return;
+    }
+    facade.exportPlaylist(songIds, "json");
   });
 }
