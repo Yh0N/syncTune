@@ -10,14 +10,31 @@ import renderNotifications from "./ui/Notifications/NotificationPanel.js";
 
 import WorkerFacade from "./services/workerFacade.js";
 
+/* ============================================================================
+    AQUÍ **SE APLICA EL PATRÓN FACADE** 🔰🔰🔰
+   ------------------------------------------------
+   WorkerFacade sirve como "intermediario" entre:
+     - La UI
+     - Los Web Workers
+     - El Store (Redux)
+
+   La UI NO habla directo con los workers.
+   Todo pasa por este objeto central simplificado.
+
+    Este "new WorkerFacade(store)" es el punto donde INICIA la fachada.
+   ============================================================================ */
 const facade = new WorkerFacade(store); // 🔥 SOLO UNA VEZ
+/* ============================================================================
+    AQUÍ TERMINA EL MOMENTO DONDE SE USA EL FACADE 🔰🔰🔰
+   ============================================================================ */
+
 
 // RENDERIZAR UI SOLO UNA VEZ
 renderAuth(apiService, store);
-renderPlayer(store, facade);
+renderPlayer(store, facade);   // 🔥 Aquí también se usa el Facade (la UI lo consume)
 renderMySongs();
 renderSearch(store);
-renderRooms(store, facade);
+renderRooms(store, facade);    // 🔥 La UI usa el Facade para manejar la sala
 renderNotifications(store);
 
 const notifSection = document.getElementById("notifications");
@@ -25,6 +42,7 @@ notifSection.style.display = "none";
 
 const authPanel = document.getElementById("auth-panel");
 const musicApp = document.getElementById("music-app");
+
 
 // SOLO LOGIN/LOGOUT
 function updateUI() {

@@ -11,82 +11,107 @@
 // ---------------------------------------------------------------------------
 
 import { createSlice } from "@reduxjs/toolkit";
+// → Importa la función que permite crear slices de Redux Toolkit
 
-// Estado inicial del reproductor
+// ---------------------------------------------------------------------------
+// ESTADO INICIAL DEL REPRODUCTOR
+// ---------------------------------------------------------------------------
 const initialState = {
   currentSong: null,   // Objeto canción actualmente seleccionada
-  isPlaying: false,    // true = sonando | false = pausado
+  isPlaying: false,    // true: sonando — false: pausado
 
-  queue: [],           // Lista de canciones a reproducir
-  strategy: "LINEAR",  // Estrategia actual del reproductor
+  queue: [],           // Cola completa de canciones cargadas
+  strategy: "LINEAR",  // Estrategia actual (Linear / Shuffle / Loop)
 
-  // Canciones subidas por el propio usuario desde su PC
-  localSongs: [],
+  localSongs: [],      // Canciones subidas localmente desde el PC
 };
 
+// ---------------------------------------------------------------------------
+// DEFINICIÓN DEL SLICE "player"
+// Aquí se crean:
+//   ✓ el estado
+//   ✓ los reducers (funciones que modifican el estado)
+//   ✓ las actions correspondientes
+// ---------------------------------------------------------------------------
 const playerSlice = createSlice({
-  name: "player",
-  initialState,
+  name: "player",        // Nombre del slice
+  initialState,          // Estado inicial
 
   reducers: {
     // --------------------------------------------------
-    // 🎵 Manejo de la cola de reproducción
+    // 🎵 MANEJO DE LA COLA DE REPRODUCCIÓN
     // --------------------------------------------------
+
     setQueue(state, action) {
-      state.queue = action.payload; // Reemplaza toda la cola
+      // Reemplaza toda la cola con un nuevo array de canciones
+      state.queue = action.payload;
     },
 
     addToQueue(state, action) {
-      state.queue.push(action.payload); // Agrega una canción al final
+      // Agrega una canción al final de la cola existente
+      state.queue.push(action.payload);
     },
 
     // --------------------------------------------------
-    // 🎧 Manejo de la canción actual
+    // 🎧 MANEJO DE LA CANCIÓN ACTUAL
     // --------------------------------------------------
+
     setSong(state, action) {
-      state.currentSong = action.payload; // Se cambia la canción actual
-      state.isPlaying = false;            // Se detiene hasta que se le dé play
+      // Cambia la canción actual por una nueva
+      state.currentSong = action.payload;
+
+      // Cada vez que se selecciona una canción, comienza en pausa
+      state.isPlaying = false;
     },
 
     playSong(state, action) {
-      // Si llega una canción → la actualizamos
+      // Si playSong recibe una canción → la actualizamos como actual
       state.currentSong = action.payload || state.currentSong;
 
-      // Si existe canción, empezamos a reproducir
+      // Si existe canción, ponemos estado "reproduciendo"
       if (state.currentSong) state.isPlaying = true;
     },
 
     pauseSong(state) {
-      state.isPlaying = false; // Solo pausa, no cambia la canción
+      // Solo pausa la canción actual, sin modificarla
+      state.isPlaying = false;
     },
 
     nextSong(state, action) {
-      state.currentSong = action.payload; // Estrategia decide cuál sigue
-      state.isPlaying = true;
+      // Recibe la canción siguiente (calculada por la Strategy)
+      state.currentSong = action.payload;
+      state.isPlaying = true; // Automáticamente la reproduce
     },
 
     previousSong(state, action) {
+      // Igual que nextSong pero hacia atrás
       state.currentSong = action.payload;
       state.isPlaying = true;
     },
 
     // --------------------------------------------------
-    // 🔄 Estrategia (LINEAR / SHUFFLE / LOOP)
+    // 🔄 MANEJO DE LA ESTRATEGIA DE REPRODUCCIÓN
+    // LINEAR / SHUFFLE / LOOP
     // --------------------------------------------------
     setStrategy(state, action) {
+      // Cambia el modo de reproducción actual
       state.strategy = action.payload;
     },
 
     // --------------------------------------------------
-    // 📁 Canciones locales ("Mis canciones")
+    // 📁 CANCIONES LOCALES
+    // Guardadas por el usuario desde su PC
     // --------------------------------------------------
     addLocalSong(state, action) {
-      state.localSongs.push(action.payload); // Guardamos canción local
+      // Agrega la canción local al array "localSongs"
+      state.localSongs.push(action.payload);
     }
   },
 });
 
-// Exportamos todas las acciones
+// ---------------------------------------------------------------------------
+// Exportamos TODAS las acciones generadas automáticamente por createSlice()
+// ---------------------------------------------------------------------------
 export const {
   setQueue,
   addToQueue,
@@ -99,5 +124,7 @@ export const {
   addLocalSong,
 } = playerSlice.actions;
 
-// Export del reducer
+// ---------------------------------------------------------------------------
+// Exportamos el reducer final para que el store lo pueda usar
+// ---------------------------------------------------------------------------
 export default playerSlice.reducer;

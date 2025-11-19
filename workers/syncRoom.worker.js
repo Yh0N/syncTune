@@ -3,52 +3,61 @@
 // ---------------------------------------------------------------------------
 // Worker encargado de SIMULAR una sala compartida de música.
 //
-// Funciona como "servidor local":
-//  - Administra invitados
-//  - Mantiene estado de la sala (activa / detenida)
-//  - Recibe acciones del host: PLAY, PAUSE, CAMBIAR CANCIÓN
-//  - Envía eventos al hilo principal mediante postMessage()
+// Este Worker actúa como un "servidor local":
+//   ✓ Maneja invitados
+//   ✓ Conserva el estado de la sala (activa o no)
+//   ✓ Procesa acciones del host (Play, Pause, Cambiar canción)
+//   ✓ Envía eventos al UI mediante postMessage()
 //
-// Este Worker se usa con WorkerFacade.js
+// Este Worker es consumido por WorkerFacade.js
 // ===========================================================================
 
-// Estado interno de la sala (solo vive dentro del Worker)
-let guests = [];
-let roomActive = false;
-let playbackStatus = null;       // "PLAYING" | "PAUSED" | null
-let autoGuestInterval = null;    // Invitados automáticos
 
-// Nombres aleatorios para simular usuarios reales
+// ---------------------------------------------------------------------------
+// ESTADO INTERNO DEL WORKER (solo existe aquí dentro)
+// ---------------------------------------------------------------------------
+let guests = [];               // Lista de invitados conectados
+let roomActive = false;        // ¿La sala está activa?
+let playbackStatus = null;     // "PLAYING" | "PAUSED" | null
+let autoGuestInterval = null;  // Intervalo para invitados automáticos
+
+
+// ---------------------------------------------------------------------------
+// LISTA DE NOMBRES ALEATORIOS PARA SIMULAR INVITADOS
+// ---------------------------------------------------------------------------
 const randomNames = ["Bob", "Alice", "Carlos", "Diana", "Emily", "Frank"];
 
 function getRandomGuest() {
   return randomNames[Math.floor(Math.random() * randomNames.length)];
 }
 
+
 // ---------------------------------------------------------------------------
-// 🔄 Emitir estado completo de la sala
+// 🔄 Emitir al main thread el estado COMPLETO de la sala
 // ---------------------------------------------------------------------------
 function emitStatus() {
   self.postMessage({
     type: "ROOM_STATUS",
     active: roomActive,
     playback: playbackStatus,
-    guests: [...guests], // copiar array
+    guests: [...guests], // copia para evitar mutaciones externas
   });
 }
 
+
 // ---------------------------------------------------------------------------
-// 🤖 Invitados automáticos cada cierto tiempo
+// 🤖 Invitados automáticos que llegan cada cierto tiempo
 // ---------------------------------------------------------------------------
 function startAutoGuests(intervalMs = 10000) {
-  if (autoGuestInterval) return; // ya existe
+  if (autoGuestInterval) return; // ya se está ejecutando → no duplicar
 
   autoGuestInterval = setInterval(() => {
-    if (!roomActive) return;
+    if (!roomActive) return; // no añadir si la sala está apagada
 
     const newGuest = getRandomGuest();
     guests.push(newGuest);
 
+    // Notificamos al host que alguien entró
     self.postMessage({
       type: "GUEST_JOINED",
       user: newGuest,
@@ -65,25 +74,28 @@ function stopAutoGuests() {
   }
 }
 
+
 // ===========================================================================
-// 📩 MANEJO DE MENSAJES DESDE EL MAIN THREAD
+// 📩 MANEJO DE MENSAJES QUE RECIBE EL WORKER DESDE WorkerFacade.js
 // ===========================================================================
+
 self.onmessage = (e) => {
   const { type, songId, payload } = e.data;
 
   switch (type) {
 
+
     // -----------------------------------------------------------------------
     // 🟢 INICIAR SALA
     // -----------------------------------------------------------------------
     case "START_ROOM":
-      roomActive = true;
-      playbackStatus = null; // Aún no reproducimos
+      roomActive = true;       // activamos la sala
+      playbackStatus = null;   // aún no hay reproducción
 
-      self.postMessage({ type: "ROOM_STARTED" });
-      emitStatus();
+      self.postMessage({ type: "ROOM_STARTED" }); // aviso a UI
+      emitStatus();                           // Estado inicial
 
-      // Primer invitado simulado
+      // Invitado inicial simulado tras 1 segundo
       setTimeout(() => {
         if (!roomActive) return;
 
@@ -98,8 +110,9 @@ self.onmessage = (e) => {
         emitStatus();
       }, 1000);
 
-      startAutoGuests();
+      startAutoGuests(); // comenzar invitaciones automáticas
       break;
+
 
     // -----------------------------------------------------------------------
     // 👤 INVITAR INVITADO MANUALMENTE
@@ -117,6 +130,7 @@ self.onmessage = (e) => {
       emitStatus();
       break;
 
+
     // -----------------------------------------------------------------------
     // ▶ HOST → PLAY
     // -----------------------------------------------------------------------
@@ -125,6 +139,7 @@ self.onmessage = (e) => {
 
       playbackStatus = "PLAYING";
 
+      // Enviar evento al hilo principal
       self.postMessage({
         type: "ROOM_PLAYBACK",
         status: playbackStatus,
@@ -132,6 +147,7 @@ self.onmessage = (e) => {
 
       emitStatus();
       break;
+
 
     // -----------------------------------------------------------------------
     // ⏸ HOST → PAUSE
@@ -149,19 +165,20 @@ self.onmessage = (e) => {
       emitStatus();
       break;
 
+
     // -----------------------------------------------------------------------
     // 🔀 HOST CAMBIA CANCIÓN
     // -----------------------------------------------------------------------
     case "HOST_CHANGED_SONG":
       if (!roomActive) return;
 
-      // Notificar al cliente qué canción seleccionó el host
+      // Enviamos al UI qué canción eligió el host
       self.postMessage({
         type: "HOST_CHANGED_SONG",
         songId,
       });
 
-      // Mantener estado actual de reproducción
+      // Mantener estado PLAY/PAUSE actual
       self.postMessage({
         type: "ROOM_PLAYBACK",
         status: playbackStatus,
@@ -170,18 +187,20 @@ self.onmessage = (e) => {
       emitStatus();
       break;
 
+
     // -----------------------------------------------------------------------
     // 🔴 DETENER SALA
     // -----------------------------------------------------------------------
     case "STOP_ROOM":
       roomActive = false;
-      stopAutoGuests();
-      guests = [];
+      stopAutoGuests();   // deja de generar invitados falsos
+      guests = [];        // borrar invitados
       playbackStatus = null;
 
       self.postMessage({ type: "ROOM_STOPPED" });
       emitStatus();
       break;
+
 
     // -----------------------------------------------------------------------
     // ❓ EVENTO DESCONOCIDO
